@@ -9,17 +9,40 @@ st.title("Dashboard de Control de Producción")
 uploaded = st.file_uploader("Sube tu archivo Excel", type=["xlsx"])
 
 if uploaded:
-
     df = pd.read_excel(uploaded, sheet_name="INYECCION_Ordenada", header=3)
     df.columns = df.columns.astype(str).str.replace("\n", " ", regex=False).str.strip()
-    
+
+    def find_col(expected: str):
+        exp = expected.strip().lower()
+        # match exacto
+        for c in df.columns:
+            if c.strip().lower() == exp:
+                return c
+        # fallback: contiene el texto
+        for c in df.columns:
+            if exp in c.strip().lower():
+                return c
+        return None
+
+    COL_MAQUINA = find_col("Nombre de la maquina")
+    COL_OPERADOR = find_col("Operador")
+    COL_TURNO = find_col("Turno")
+
+    for name, col in {
+        "Nombre de la maquina": COL_MAQUINA,
+        "Operador": COL_OPERADOR,
+        "Turno": COL_TURNO
+    }.items():
+        if col is None:
+            st.error(f"No encontré la columna: {name}. Columnas detectadas: {list(df.columns)}")
+            st.stop()
 
     # Columnas importantes
     COL_FECHA = "Fecha DD/MM/AA"
     COL_SEMANA = "Semana"
-    COL_MAQUINA = "Nombre de la maquina "
+    COL_MAQUINA = "Nombre de la maquina"
     COL_TURNO = "Turno"
-    COL_OPERADOR = "Operador "
+    COL_OPERADOR = "Operador"
 
     COL_DISP = "DISPONIBILIDAD"
     COL_EFIC = "EFICIENCIA"
