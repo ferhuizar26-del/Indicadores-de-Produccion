@@ -11,6 +11,8 @@ uploaded = st.file_uploader("Sube tu archivo Excel", type=["xlsx"])
 if uploaded:
 
     df = pd.read_excel(uploaded)
+    
+    df.columns = df.columns.str.strip()
 
     # Columnas importantes
     COL_FECHA = "Fecha DD/MM/AA"
