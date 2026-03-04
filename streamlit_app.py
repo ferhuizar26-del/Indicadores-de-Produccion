@@ -10,9 +10,9 @@ uploaded = st.file_uploader("Sube tu archivo Excel", type=["xlsx"])
 
 if uploaded:
 
-    df = pd.read_excel(uploaded)
+    df = pd.read_excel(uploaded, sheet_name="INYECCION_Ordenada", header=3)
+    df.columns = df.columns.astype(str).str.replace("\n", " ", regex=False).str.strip()
     
-    df.columns = df.columns.str.strip()
 
     # Columnas importantes
     COL_FECHA = "Fecha DD/MM/AA"
