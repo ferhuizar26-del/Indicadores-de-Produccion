@@ -83,7 +83,7 @@ if uploaded:
     # -------------------
     # KPIs (promedio del filtro actual)
     # -------------------
-    st.subheader("Indicadores actuales (promedio del filtro)")
+    st.subheader("Indicadores General")
 
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("Disponibilidad", f"{df[COL_DISP].mean():.1f}%")
