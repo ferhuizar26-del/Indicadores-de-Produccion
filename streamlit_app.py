@@ -76,12 +76,19 @@ if uploaded:
         .str.title()
     )
 
-    df[COL_TURNO] = (
+        df[COL_TURNO] = (
         df[COL_TURNO]
         .astype(str)
         .str.strip()
         .str.replace(r"\s+", " ", regex=True)
     )
+
+    # Elimina registros donde no existe turno
+    df = df.dropna(subset=[COL_TURNO])
+
+    # Convierte turno a número limpio (1,2,3 en lugar de 1.0,2.0,3.0)
+    df[COL_TURNO] = pd.to_numeric(df[COL_TURNO], errors="coerce")
+    df[COL_TURNO] = df[COL_TURNO].astype("Int64")
 
     df[COL_PRODUCTO] = (
         df[COL_PRODUCTO]
