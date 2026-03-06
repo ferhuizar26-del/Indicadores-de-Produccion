@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.express as px
 
 st.set_page_config(page_title="Indicadores de Producción", layout="wide")
-st.title("Dashboard de Control de Producción")
+st.title("Control de Producción Industrial MEFI")
 
 uploaded = st.file_uploader("Sube tu archivo Excel", type=["xlsx"])
 
