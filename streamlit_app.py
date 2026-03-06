@@ -76,7 +76,7 @@ if uploaded:
         .str.title()
     )
 
-        df[COL_TURNO] = (
+    df[COL_TURNO] = (
         df[COL_TURNO]
         .astype(str)
         .str.strip()
