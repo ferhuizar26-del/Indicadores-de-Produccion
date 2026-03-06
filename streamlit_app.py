@@ -67,6 +67,27 @@ if uploaded:
     # -------------------
     df[COL_FECHA] = pd.to_datetime(df[COL_FECHA], dayfirst=True, errors="coerce")
     df[COL_SEMANA] = pd.to_numeric(df[COL_SEMANA], errors="coerce")
+    df[COL_MAQUINA] = (
+    df[COL_MAQUINA]
+    .astype(str)
+    .str.strip()
+    .str.replace(r"\s+", " ", regex=True)
+    .str.title()
+)
+
+df[COL_TURNO] = (
+    df[COL_TURNO]
+    .astype(str)
+    .str.strip()
+    .str.replace(r"\s+", " ", regex=True)
+)
+
+df[COL_PRODUCTO] = (
+    df[COL_PRODUCTO]
+    .astype(str)
+    .str.strip()
+    .str.replace(r"\s+", " ", regex=True)
+)
 
     numeric_cols = [
         COL_TOTAL, COL_MALA, COL_T_MUERTO, COL_T_DISP, COL_SCRAP_GR,
