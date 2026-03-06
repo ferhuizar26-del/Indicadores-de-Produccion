@@ -67,27 +67,28 @@ if uploaded:
     # -------------------
     df[COL_FECHA] = pd.to_datetime(df[COL_FECHA], dayfirst=True, errors="coerce")
     df[COL_SEMANA] = pd.to_numeric(df[COL_SEMANA], errors="coerce")
+
     df[COL_MAQUINA] = (
-    df[COL_MAQUINA]
-    .astype(str)
-    .str.strip()
-    .str.replace(r"\s+", " ", regex=True)
-    .str.title()
-)
+        df[COL_MAQUINA]
+        .astype(str)
+        .str.strip()
+        .str.replace(r"\s+", " ", regex=True)
+        .str.title()
+    )
 
-df[COL_TURNO] = (
-    df[COL_TURNO]
-    .astype(str)
-    .str.strip()
-    .str.replace(r"\s+", " ", regex=True)
-)
+    df[COL_TURNO] = (
+        df[COL_TURNO]
+        .astype(str)
+        .str.strip()
+        .str.replace(r"\s+", " ", regex=True)
+    )
 
-df[COL_PRODUCTO] = (
-    df[COL_PRODUCTO]
-    .astype(str)
-    .str.strip()
-    .str.replace(r"\s+", " ", regex=True)
-)
+    df[COL_PRODUCTO] = (
+        df[COL_PRODUCTO]
+        .astype(str)
+        .str.strip()
+        .str.replace(r"\s+", " ", regex=True)
+    )
 
     numeric_cols = [
         COL_TOTAL, COL_MALA, COL_T_MUERTO, COL_T_DISP, COL_SCRAP_GR,
@@ -97,7 +98,6 @@ df[COL_PRODUCTO] = (
     for c in numeric_cols:
         if c in df.columns:
             df[c] = pd.to_numeric(df[c], errors="coerce")
-
     # Convertir indicadores a porcentaje 0-100 si vienen en 0-1
     for c in [COL_DISP, COL_EFIC, COL_CAL, COL_OEE]:
         mx = df[c].max(skipna=True)
