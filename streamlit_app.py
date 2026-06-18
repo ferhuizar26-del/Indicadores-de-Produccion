@@ -165,7 +165,7 @@ if uploaded:
     # -------------------
     st.subheader("Indicadores generales")
 
-    k1, k2, k3, k4, k5, k6 = st.columns(6)
+    k1, k2, k3, k4, k5, k6 = st.columns([1, 1, 1, 1, 1, 1.25])
     k1.metric("Disponibilidad", f"{df[COL_DISP].mean():.1f}%")
     k2.metric("Eficiencia", f"{df[COL_EFIC].mean():.1f}%")
     k3.metric("Calidad", f"{df[COL_CAL].mean():.1f}%")
@@ -200,10 +200,19 @@ if uploaded:
         if meta is not None:
             fig.add_hline(y=meta, line_dash="dash", annotation_text=f"Meta {meta:.1f}%")
         fig.update_layout(
-            xaxis_title="Semana",
-            yaxis_title="%",
-            yaxis=dict(range=[0, 100]),
-            margin=dict(l=10, r=10, t=50, b=10)
+            xaxis_title="<b>Semana</b>",
+            yaxis_title="<b>%</b>",
+            yaxis=dict(
+                range=[0, 100],
+                title_font=dict(size=18),
+                tickfont=dict(size=14)
+            ),
+            xaxis=dict(
+                title_font=dict(size=18),
+                tickfont=dict(size=14)
+            ),
+            title_font=dict(size=20),
+            margin=dict(l=10, r=10, t=60, b=20)
         )
         st.plotly_chart(fig, use_container_width=True)
 
