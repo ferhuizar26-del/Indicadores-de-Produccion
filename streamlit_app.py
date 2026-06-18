@@ -242,6 +242,16 @@ if uploaded:
         )
         st.plotly_chart(fig, use_container_width=True)
 
+    def aplicar_formato_grafica(fig, x_title, y_title):
+        fig.update_layout(
+            xaxis_title=f"<b>{x_title}</b>",
+            yaxis_title=f"<b>{y_title}</b>",
+            xaxis=dict(title_font=dict(size=18), tickfont=dict(size=14)),
+            yaxis=dict(title_font=dict(size=18), tickfont=dict(size=14)),
+            title_font=dict(size=20),
+            margin=dict(l=10, r=10, t=60, b=30)
+        )
+        return fig
     # -------------------
     # TABS
     # -------------------
@@ -290,7 +300,7 @@ if uploaded:
                 text_auto=".2f"
             )
             fig_scrap_mq.add_hline(y=meta_scrap, line_dash="dash", annotation_text=f"Meta {meta_scrap:.1f}%")
-            fig_scrap_mq.update_layout(yaxis_title="% Scrap", xaxis_title="Máquina")
+            fig_scrap_mq = aplicar_formato_grafica(fig_scrap_mq, "Máquina", "% Scrap")
             st.plotly_chart(fig_scrap_mq, use_container_width=True)
 
         with d2:
@@ -307,7 +317,7 @@ if uploaded:
                 title=f"Tiempo muerto por turno - Semana {int(semana_sel)}",
                 text_auto=".2f"
             )
-            fig_tm_turno.update_layout(yaxis_title="Horas", xaxis_title="Turno")
+            fig_tm_turno = aplicar_formato_grafica(fig_tm_turno, "Turno", "Horas")
             st.plotly_chart(fig_tm_turno, use_container_width=True)
 
         st.markdown("### Histórico por turno")
@@ -332,7 +342,7 @@ if uploaded:
                 title="Histórico de scrap por turno"
             )
             fig_hist_scrap_turno.add_hline(y=meta_scrap, line_dash="dash", annotation_text=f"Meta {meta_scrap:.1f}%")
-            fig_hist_scrap_turno.update_layout(yaxis_title="% Scrap", xaxis_title="Semana")
+            fig_hist_scrap_turno = aplicar_formato_grafica(fig_hist_scrap_turno, "Semana", "% Scrap")
             st.plotly_chart(fig_hist_scrap_turno, use_container_width=True)
 
         with h2:
@@ -344,7 +354,7 @@ if uploaded:
                 markers=True,
                 title="Histórico de tiempo muerto por turno"
             )
-            fig_hist_tm_turno.update_layout(yaxis_title="Horas", xaxis_title="Semana")
+            fig_hist_tm_turno = aplicar_formato_grafica(fig_hist_tm_turno, "Semana", "Horas")
             st.plotly_chart(fig_hist_tm_turno, use_container_width=True)
 
     with tab3:
@@ -374,7 +384,7 @@ if uploaded:
                 text_auto=".1f"
             )
             fig_prod_oee.add_hline(y=meta_oee, line_dash="dash", annotation_text=f"Meta {meta_oee:.1f}%")
-            fig_prod_oee.update_layout(yaxis_title="OEE (%)", xaxis_title="Producto")
+            fig_prod_oee = aplicar_formato_grafica(fig_prod_oee, "Producto", "OEE (%)")
             st.plotly_chart(fig_prod_oee, use_container_width=True)
 
         with p2:
@@ -386,7 +396,7 @@ if uploaded:
                 text_auto=".2f"
             )
             fig_prod_scrap.add_hline(y=meta_scrap, line_dash="dash", annotation_text=f"Meta {meta_scrap:.1f}%")
-            fig_prod_scrap.update_layout(yaxis_title="% Scrap", xaxis_title="Producto")
+            fig_prod_scrap = aplicar_formato_grafica(fig_prod_scrap, "Producto", "% Scrap")
             st.plotly_chart(fig_prod_scrap, use_container_width=True)
 
         st.markdown("### Tendencia semanal por producto")
@@ -420,7 +430,7 @@ if uploaded:
                     title="OEE semanal por producto"
                 )
                 fig_hist_oee_prod.add_hline(y=meta_oee, line_dash="dash", annotation_text=f"Meta {meta_oee:.1f}%")
-                fig_hist_oee_prod.update_layout(yaxis_title="OEE (%)", xaxis_title="Semana")
+                fig_hist_oee_prod = aplicar_formato_grafica(fig_hist_oee_prod, "Semana", "OEE (%)")
                 st.plotly_chart(fig_hist_oee_prod, use_container_width=True)
 
             with q2:
@@ -433,7 +443,7 @@ if uploaded:
                     title="Scrap semanal por producto"
                 )
                 fig_hist_scrap_prod.add_hline(y=meta_scrap, line_dash="dash", annotation_text=f"Meta {meta_scrap:.1f}%")
-                fig_hist_scrap_prod.update_layout(yaxis_title="% Scrap", xaxis_title="Semana")
+                fig_hist_scrap_prod = aplicar_formato_grafica(fig_hist_scrap_prod, "Semana", "% Scrap")
                 st.plotly_chart(fig_hist_scrap_prod, use_container_width=True)
 
 else:
