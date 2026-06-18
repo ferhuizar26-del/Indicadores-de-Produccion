@@ -227,9 +227,18 @@ if uploaded:
         if meta is not None:
             fig.add_hline(y=meta, line_dash="dash", annotation_text=f"Meta {meta:.1f} hrs")
         fig.update_layout(
-            xaxis_title="Semana",
-            yaxis_title="Horas",
-            margin=dict(l=10, r=10, t=50, b=10)
+            xaxis_title="<b>Semana</b>",
+            yaxis_title="<b>Horas</b>",
+            yaxis=dict(
+                title_font=dict(size=18),
+                tickfont=dict(size=14)
+            ),
+            xaxis=dict(
+                title_font=dict(size=18),
+                tickfont=dict(size=14)
+            ),
+            title_font=dict(size=20),
+            margin=dict(l=10, r=10, t=60, b=20)
         )
         st.plotly_chart(fig, use_container_width=True)
 
