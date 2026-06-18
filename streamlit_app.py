@@ -71,8 +71,10 @@ if uploaded:
     df[COL_MAQUINA] = (
         df[COL_MAQUINA]
         .astype(str)
+        .str.upper()
         .str.strip()
         .str.replace(r"\s+", " ", regex=True)
+        .str.replace(r"^LA\s+", "", regex=True)
         .str.title()
     )
 
