@@ -5,9 +5,7 @@ import plotly.express as px
 st.set_page_config(page_title="Indicadores de Producción", layout="wide")
 st.markdown("""
 <style>
-div[data-testid="stMetric"] {
-    padding: 10px 10px;
-}
+div[data-testid="stMetric"] { padding: 10px 10px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -58,70 +56,76 @@ if uploaded:
     ]
     missing = [c for c in needed if c not in df.columns]
     if missing:
-        st.error(f"Faltan columnas en el Excel: {missing}\n\nColumnas detectadas: {list(df.columns)}")
+        st.error(f"Faltan columnas: {missing}\n\nColumnas detectadas: {list(df.columns)}")
         st.stop()
 
     # -------------------
-    # LIMPIEZA Y TIPOS
+    # LIMPIEZA GENERAL
     # -------------------
-    df[COL_FECHA]   = pd.to_datetime(df[COL_FECHA], dayfirst=True, errors="coerce")
-    df[COL_SEMANA]  = pd.to_numeric(df[COL_SEMANA], errors="coerce")
+    df[COL_FECHA] = pd.to_datetime(df[COL_FECHA], dayfirst=True, errors="coerce")
+    df[COL_SEMANA] = pd.to_numeric(df[COL_SEMANA], errors="coerce")
 
-    df[COL_MAQUINA] = (
-        df[COL_MAQUINA].astype(str).str.strip()
-        .str.replace(r"\s+", " ", regex=True).str.title()
-    )
+    df[COL_MAQUINA] = df[COL_MAQUINA].astype(str).str.strip().str.replace(r"\s+", " ", regex=True).str.title()
     df[COL_TURNO]   = df[COL_TURNO].astype(str).str.strip().str.replace(r"\s+", " ", regex=True)
     df = df.dropna(subset=[COL_TURNO])
     df[COL_TURNO]   = pd.to_numeric(df[COL_TURNO], errors="coerce").astype("Int64")
-    df[COL_PRODUCTO]= (
-        df[COL_PRODUCTO].astype(str).str.strip().str.replace(r"\s+", " ", regex=True)
-    )
+    df[COL_PRODUCTO]= df[COL_PRODUCTO].astype(str).str.strip().str.replace(r"\s+", " ", regex=True)
 
-    # ---------------------------------------------------------------
-    # FUNCIÓN PARA LIMPIAR VALORES QUE VIENEN COMO "97%", "22,5%", etc.
-    # ---------------------------------------------------------------
-    def clean_numeric(series: pd.Series) -> pd.Series:
-        """
-        Convierte columnas que pueden llegar como:
-          - número puro: 0.97 o 97
-          - string con %: "97%" o "97,5%"
-          - string con coma decimal: "132,86"
-        → siempre devuelve float.
-        """
-        s = series.astype(str).str.strip()
-        has_pct = s.str.contains("%", na=False)
-        s = s.str.replace("%", "", regex=False).str.replace(",", ".", regex=False).str.strip()
-        result = pd.to_numeric(s, errors="coerce")
-        # Si venían con % y el valor resultante es <= 1.5 → ya estaba en fracción, multiplicar x100
-        # Si venían con % y el valor > 1.5 → ya estaba en escala 0-100, dejar igual
-        # (No ajustamos aquí, se unifica abajo)
-        return result, has_pct
+    # -------------------
+    # FUNCIÓN ROBUSTA PARA LIMPIAR NUMÉRICOS
+    # Maneja: 0.97 | 97 | "97%" | "97,5%" | "0,97" | "0,97%"
+    # Siempre devuelve escala 0-100
+    # -------------------
+    def to_percent_0_100(series: pd.Series) -> pd.Series:
+        s = series.copy()
+        # Si la columna es object/string, limpiar texto
+        if s.dtype == object:
+            s = (
+                s.astype(str)
+                 .str.strip()
+                 .str.replace("%", "", regex=False)
+                 .str.replace(",", ".", regex=False)
+            )
+        s = pd.to_numeric(s, errors="coerce")
+        # Si el máximo está entre 0 y 1.5 → estaban en fracción (0.97 → 97)
+        mx = s.max(skipna=True)
+        if pd.notna(mx) and mx <= 1.5:
+            s = s * 100
+        return s
 
-    numeric_simple = [COL_TOTAL, COL_MALA, COL_T_MUERTO, COL_T_DISP, COL_SCRAP_GR]
-    for c in numeric_simple:
+    def to_numeric_clean(series: pd.Series) -> pd.Series:
+        """Para columnas numéricas simples con posible coma decimal o texto."""
+        s = series.copy()
+        if s.dtype == object:
+            s = (
+                s.astype(str)
+                 .str.strip()
+                 .str.replace("%", "", regex=False)
+                 .str.replace(",", ".", regex=False)
+            )
+        return pd.to_numeric(s, errors="coerce")
+
+    # Columnas numéricas simples
+    for c in [COL_TOTAL, COL_MALA, COL_T_MUERTO, COL_T_DISP, COL_SCRAP_GR]:
         if c in df.columns:
-            df[c], _ = clean_numeric(df[c])
+            df[c] = to_numeric_clean(df[c])
 
-    # Indicadores: limpiar y normalizar a escala 0-100
+    # Indicadores → siempre escala 0-100
     for c in [COL_DISP, COL_EFIC, COL_CAL, COL_OEE]:
-        df[c], had_pct = clean_numeric(df[c])
-        # Si NO venían con % y el máximo es <= 1.5 → estaban en fracción 0-1
-        if not had_pct.any():
-            mx = df[c].max(skipna=True)
-            if pd.notna(mx) and mx <= 1.5:
-                df[c] = df[c] * 100
-        # Si venían con % el valor ya está en 0-100 (ej. 97, 22, 100)
-        # pero si alguien puso "0.97%" lo normalizamos:
-        else:
-            mx = df[c].max(skipna=True)
-            if pd.notna(mx) and mx <= 1.5:
-                df[c] = df[c] * 100
+        df[c] = to_percent_0_100(df[c])
 
     # Métricas derivadas
-    df["SCRAP_%"]          = (df[COL_MALA] / df[COL_TOTAL]) * 100
-    df["SCRAP_%"]          = df["SCRAP_%"].replace([float("inf"), -float("inf")], pd.NA)
-    df["TIEMPO_MUERTO_HRS"]= df[COL_T_MUERTO] / 60
+    df["SCRAP_%"]           = (df[COL_MALA] / df[COL_TOTAL]) * 100
+    df["SCRAP_%"]           = df["SCRAP_%"].replace([float("inf"), -float("inf")], pd.NA)
+    df["TIEMPO_MUERTO_HRS"] = df[COL_T_MUERTO] / 60
+
+    # -------------------
+    # DIAGNÓSTICO (actívalo si algo sigue fallando)
+    # -------------------
+    with st.expander("🔍 Diagnóstico — valores reales de indicadores (primeras 5 filas)"):
+        st.dataframe(df[[COL_SEMANA, COL_DISP, COL_EFIC, COL_CAL, COL_OEE]].head(10))
+        st.write("Estadísticas:")
+        st.dataframe(df[[COL_DISP, COL_EFIC, COL_CAL, COL_OEE]].describe())
 
     # -------------------
     # FILTROS
@@ -162,17 +166,9 @@ if uploaded:
         st.stop()
 
     # -------------------
-    # DEBUG RÁPIDO (descomenta si necesitas verificar)
-    # -------------------
-    # with st.expander("🔍 Diagnóstico de columnas (debug)"):
-    #     st.write(df[[COL_DISP, COL_EFIC, COL_CAL, COL_OEE]].describe())
-    #     st.dataframe(df[[COL_DISP, COL_EFIC, COL_CAL, COL_OEE]].head(10))
-
-    # -------------------
     # KPIs GENERALES
     # -------------------
     st.subheader("Indicadores generales")
-
     k1, k2, k3, k4, k5, k6 = st.columns(6)
     k1.metric("Disponibilidad", f"{df[COL_DISP].mean():.1f}%")
     k2.metric("Eficiencia",     f"{df[COL_EFIC].mean():.1f}%")
@@ -187,12 +183,12 @@ if uploaded:
     weekly = (
         df.groupby(COL_SEMANA, as_index=False)
         .agg({
-            COL_DISP:           "mean",
-            COL_EFIC:           "mean",
-            COL_CAL:            "mean",
-            COL_OEE:            "mean",
-            "SCRAP_%":          "mean",
-            "TIEMPO_MUERTO_HRS":"sum"
+            COL_DISP:            "mean",
+            COL_EFIC:            "mean",
+            COL_CAL:             "mean",
+            COL_OEE:             "mean",
+            "SCRAP_%":           "mean",
+            "TIEMPO_MUERTO_HRS": "sum"
         })
         .sort_values(COL_SEMANA)
     )
@@ -203,7 +199,7 @@ if uploaded:
             fig.add_hline(y=meta, line_dash="dash", annotation_text=f"Meta {meta:.1f}%")
         fig.update_layout(
             xaxis_title="Semana", yaxis_title="%",
-            yaxis=dict(range=[0, 110]),          # ← 110 para que el 100% no quede pegado al borde
+            yaxis=dict(range=[0, 110]),
             margin=dict(l=10, r=10, t=50, b=10)
         )
         st.plotly_chart(fig, use_container_width=True)
@@ -237,9 +233,9 @@ if uploaded:
         st.subheader("Scrap y tiempo muerto")
         c1, c2 = st.columns(2)
         with c1:
-            plot_percent_line(weekly, "SCRAP_%",           "Histórico semanal de scrap (%)",            meta_scrap)
+            plot_percent_line(weekly, "SCRAP_%",           "Histórico semanal de scrap (%)",           meta_scrap)
         with c2:
-            plot_hours_line(weekly,  "TIEMPO_MUERTO_HRS", "Histórico semanal de tiempo muerto (hrs)",  meta_tm)
+            plot_hours_line(weekly,  "TIEMPO_MUERTO_HRS", "Histórico semanal de tiempo muerto (hrs)", meta_tm)
 
         st.markdown("### Detalle por semana")
         semanas_disponibles = sorted(df[COL_SEMANA].dropna().unique().tolist())
@@ -274,7 +270,6 @@ if uploaded:
             .agg({"SCRAP_%": "mean", "TIEMPO_MUERTO_HRS": "sum"})
             .sort_values([COL_SEMANA, COL_TURNO])
         )
-        # Turno como string para que Plotly lo trate como categoría y use colores distintos
         hist_turno[COL_TURNO] = hist_turno[COL_TURNO].astype(str)
 
         h1, h2 = st.columns(2)
@@ -293,16 +288,15 @@ if uploaded:
 
     with tab3:
         st.subheader("Indicadores por producto")
-
         producto_kpis = (
             df.groupby(COL_PRODUCTO, as_index=False)
             .agg({
-                COL_OEE:            "mean",
-                COL_DISP:           "mean",
-                COL_EFIC:           "mean",
-                COL_CAL:            "mean",
-                "SCRAP_%":          "mean",
-                "TIEMPO_MUERTO_HRS":"sum"
+                COL_OEE:             "mean",
+                COL_DISP:            "mean",
+                COL_EFIC:            "mean",
+                COL_CAL:             "mean",
+                "SCRAP_%":           "mean",
+                "TIEMPO_MUERTO_HRS": "sum"
             })
             .sort_values(COL_OEE, ascending=False)
         )
